@@ -24,7 +24,11 @@ import org.jivesoftware.openfire.interceptor.InterceptorManager;
 import org.jivesoftware.openfire.interceptor.PacketInterceptor;
 import org.jivesoftware.openfire.interceptor.PacketRejectedException;
 import org.jivesoftware.openfire.session.Session;
+import org.jivesoftware.openfire.user.User;
+import org.jivesoftware.openfire.user.UserManager;
 import org.jivesoftware.util.JiveGlobals;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.Presence;
@@ -44,6 +48,9 @@ import java.util.*;
  * @author <a href="mailto:ryan@version2software.com">Ryan Graham</a>
  */
 public class SubscriptionPlugin implements Plugin {
+
+    private static final Logger Log = LoggerFactory.getLogger(SubscriptionPlugin.class);
+
     public static final String DISABLED = "disabled";
     public static final String ACCEPT = "accept";
     public static final String REJECT = "reject";
@@ -153,7 +160,8 @@ public class SubscriptionPlugin implements Plugin {
                 return;
             }
 
-            if ((packet instanceof Presence) && !incoming && !processed) {
+            if ((packet instanceof Presence) && !processed) {
+
                 Presence presencePacket = (Presence) packet;
 
                 Type presenceType = presencePacket.getType();
@@ -161,17 +169,40 @@ public class SubscriptionPlugin implements Plugin {
                     JID toJID = presencePacket.getTo();
                     JID fromJID = presencePacket.getFrom();
 
-                    String toNode = toJID.getNode();
-                    if (whiteList.contains(toNode)) {
-                        return;
-                    }
+                    if (!incoming) {
+                        String toNode = toJID.getNode();
+                        if (whiteList.contains(toNode)) {
+                            return;
+                        }
 
-                    if (type.equals(ACCEPT)) {
-                        acceptSubscription(toJID, fromJID);
-                    }
+                        if (type.equals(ACCEPT)) {
+                            acceptSubscription(toJID, fromJID);
+                        }
 
-                    if (type.equals(REJECT)) {
-                        rejectSubscription(toJID, fromJID);
+                        if (type.equals(REJECT)) {
+                            rejectSubscription(toJID, fromJID);
+                        }
+                    } else {
+                        if (fromJID.getDomain() != null && XMPPServer.getInstance().isRemote(fromJID)) {
+                            //this is from a remote user, be nice and send back the users current status
+                            if (toJID.getDomain() != null && XMPPServer.getInstance().isLocal(toJID)) {
+                                try {
+                                    User user = UserManager.getInstance().getUser(toJID.getNode());
+                                    Presence userPresence = XMPPServer.getInstance().getPresenceManager().getPresence(user);
+
+                                    Presence presence = new Presence();
+                                    presence.setType(userPresence.getType());
+
+                                    presence.setTo(fromJID);
+                                    presence.setFrom(toJID);
+                                    router.route(presence);
+
+                                    Log.info( "Sent initial presence for {} to remote user {}", toJID, fromJID );
+                                } catch (Exception ex) {
+                                    Log.error( "An exception occurred while trying to get the presence for {}", toJID, ex );
+                                }
+                            }
+                        }
                     }
                 }
             }
