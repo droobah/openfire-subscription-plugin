@@ -192,6 +192,8 @@ public class SubscriptionPlugin implements Plugin {
 
                                     Presence presence = new Presence();
                                     presence.setType(userPresence.getType());
+                                    presence.setStatus(userPresence.getStatus());
+                                    presence.setShow(userPresence.getShow());
 
                                     presence.setTo(fromJID);
                                     presence.setFrom(toJID);
