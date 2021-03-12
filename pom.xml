@@ -10,7 +10,7 @@
     <artifactId>subscription</artifactId>
     <name>Subscription Plugin</name>
     <description>Automatically accepts or rejects subscription requests</description>
-    <version>1.4.1-SNAPSHOT</version>
+    <version>1.4.2-SNAPSHOT</version>
 
     <developers>
         <developer>
@@ -20,6 +20,15 @@
             <name>Andrew Waterson</name>
         </developer>
     </developers>
+
+    <repositories>
+        <!-- Where we obtain dependencies. -->
+        <repository>
+            <id>igniterealtime</id>
+            <name>Ignite Realtime Repository</name>
+            <url>https://igniterealtime.org/archiva/repository/maven/</url>
+        </repository>
+    </repositories>
 
     <build>
         <sourceDirectory>src/java</sourceDirectory>
@@ -33,25 +42,5 @@
             </plugin>
         </plugins>
     </build>
-
-    <repositories>
-        <!-- Where we obtain dependencies. -->
-        <repository>
-            <id>igniterealtime</id>
-            <name>Ignite Realtime Repository</name>
-            <url>https://igniterealtime.org/archiva/repository/maven/</url>
-        </repository>
-    </repositories>
-
-    <pluginRepositories>
-        <!-- Typically used to retrieve Maven plugins used by this project from. This
-             apparently is also used to obtain the dependencies _used by_ plugins
-        (eg: openfire-plugin-assembly-descriptor) -->
-        <pluginRepository>
-            <id>igniterealtime</id>
-            <name>Ignite Realtime Repository</name>
-            <url>https://igniterealtime.org/archiva/repository/maven/</url>
-        </pluginRepository>
-    </pluginRepositories>
 
 </project>
